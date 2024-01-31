@@ -9,6 +9,9 @@ import (
 	"time"
 )
 
+// createRandomAccount cria uma conta com valores aleatórios e retorna essa conta.
+// Utiliza funções do pacote utils para gerar valores aleatórios para os campos da conta.
+// Realiza várias verificações para assegurar que a conta foi criada corretamente.
 func createRandomAccount(t *testing.T) Account { //
 	arg := CreateAccountParams{
 		Owner:    utils.RandomOwner(),
@@ -16,34 +19,27 @@ func createRandomAccount(t *testing.T) Account { //
 		Currency: utils.RandomCurrency(),
 	}
 
-	// CreateAccount retornará um objeto account ou um erro
-	account, err := testQueries.CreateAccount(context.Background(), arg)
-	// Irá checar que o erro deve ser nil e irá automaticamente falhar o teste se não for
+	account, err := testStore.CreateAccount(context.Background(), arg)
 	require.NoError(t, err)
-	// A conta retornada não pode ser um objeto vazio
 	require.NotEmpty(t, account)
-
-	// Verifica se account Owner, Balance e Currency correspondem aos argumentos do input arg
 	require.Equal(t, arg.Owner, account.Owner)
 	require.Equal(t, arg.Balance, account.Balance)
 	require.Equal(t, arg.Currency, account.Currency)
-
-	// Checa se o ID foi automaticamente gerado pelo Postgres
 	require.NotZero(t, account.ID)
 	require.NotZero(t, account.CreatedAt)
 
 	return account
 }
 
-// Test_CreateAccount verifica se a função CreateAccount está retornando um objeto account, se o erro está vindo nil,
-// se a conta retornada não é um objeto vazio, verifica se os argumentos esperados pela interface CreateAccountParams
-// batem com os enviados pelo input e no final verifica se o ID foi gerado.
+// Test_CreateAccount testa se a função CreateAccount funciona conforme esperado.
+// Verifica se a conta criada corresponde aos parâmetros fornecidos e se os campos obrigatórios estão presentes.
 func Test_CreateAccount(t *testing.T) {
 	createRandomAccount(t)
 }
 
-func Test_GetAccount(t *testing.T) {
-	// cria account
+// Test_GetAccount testa a função GetAccount.
+// Cria uma conta, recupera essa conta e verifica se os dados recuperados correspondem aos dados da conta criada.
+func TestGetAccount(t *testing.T) {
 	account1 := createRandomAccount(t)
 	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
 	require.NoError(t, err)
@@ -56,7 +52,9 @@ func Test_GetAccount(t *testing.T) {
 	require.WithinDuration(t, account1.CreatedAt, account2.CreatedAt, time.Second)
 }
 
-func TestGetAccount(t *testing.T) {
+// TestUpdateAccount testa a função UpdateAccount.
+// Cria uma conta, atualiza-a e verifica se os dados atualizados correspondem aos esperados.
+func TestUpdateAccount(t *testing.T) {
 	account1 := createRandomAccount(t)
 
 	arg := UpdateAccountParams{
@@ -75,6 +73,8 @@ func TestGetAccount(t *testing.T) {
 	require.WithinDuration(t, account1.CreatedAt, account2.CreatedAt, time.Second)
 }
 
+// TestDeleteAccount testa a função DeleteAccount.
+// Cria uma conta, deleta-a e verifica se ela realmente foi removida.
 func TestDeleteAccount(t *testing.T) {
 	account1 := createRandomAccount(t)
 	err := testQueries.DeleteAccount(context.Background(), account1.ID)
@@ -86,6 +86,8 @@ func TestDeleteAccount(t *testing.T) {
 	require.Empty(t, account2)
 }
 
+// TestListAccounts testa a função ListAccounts.
+// Cria várias contas, lista uma quantidade específica delas e verifica se a lista contém a quantidade correta de contas.
 func TestListAccounts(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		createRandomAccount(t)
